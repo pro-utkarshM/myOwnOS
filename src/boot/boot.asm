@@ -4,6 +4,8 @@ _start:
     jmp short start
     nop
 
+times 33 db 0 ; for bios parameter block
+
 start:
     jmp 0x7c0:step2
 
