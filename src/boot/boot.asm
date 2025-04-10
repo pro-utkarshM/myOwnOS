@@ -9,19 +9,6 @@ times 33 db 0 ; for bios parameter block
 start:
     jmp 0x7c0:step2
 
-; handle_zero:
-;     mov ah, 0eh
-;     mov al, 'A'
-;     mov bx, 0x00
-;     int 0x10
-;     iret
-; handle_one:
-;     mov ah, 0eh
-;     mov al, 'B'
-;     mov bx, 0x00
-;     int 0x10
-;     iret
-
 
 step2:
     cli ; clear Interrupt
@@ -33,18 +20,22 @@ step2:
     mov sp, 0x7c00
     sti ; enable interrupts
 
-    ; mov word[ss:0x00], handle_zero ; we do this [ss:0x00] to make sure this points to ss otherwise it will point to ds (0x7c0)
-    ; mov word[ss:0x02], 0x7c0
-    ; int 0 ; we know that the first interrupt takes 4bytes and starts at 0x00
+    mov ah, 2 ; READ sector command
+    mov al, 1 ; one sector to read
+    mov ch, 0 ; cylinder low eight bits
+    mov cl, 2 ; read sector two
+    mov dh, 0 ; head number
+    mov bx, buffer
+    int 0x13 ; invoking read command
+    jc error
 
-    ; mov ax, 0x00
-    ; div ax ; divide by zero is 0 interrupt; we call it automatically
+    mov si, buffer
+    call print
 
-    ; mov word[ss:0x04], handle_one
-    ; mov word[ss:0x06], 0x7c0
-    ; int 1
+    jmp $
 
-    mov si, message
+error:
+    mov si, error_message
     call print
     jmp $
 
@@ -64,6 +55,10 @@ print_char:
     int 0x10
     ret
 
-message: db 'Hello World!', 0
+error_message: db 'failed to load sector', 0
+
 times 510-($ - $$) db 0
 dw 0xAA55
+
+buffer: 
+;write to 7c00+200 = 7e00 assemble can reference it as if its going to be loaded
