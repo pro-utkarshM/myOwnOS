@@ -20,23 +20,6 @@ step2:
     mov sp, 0x7c00
     sti ; enable interrupts
 
-    mov ah, 2 ; READ sector command
-    mov al, 1 ; one sector to read
-    mov ch, 0 ; cylinder low eight bits
-    mov cl, 2 ; read sector two
-    mov dh, 0 ; head number
-    mov bx, buffer
-    int 0x13 ; invoking read command
-    jc error
-
-    mov si, buffer
-    call print
-
-    jmp $
-
-error:
-    mov si, error_message
-    call print
     jmp $
 
 print:
@@ -55,10 +38,5 @@ print_char:
     int 0x10
     ret
 
-error_message: db 'failed to load sector', 0
-
 times 510-($ - $$) db 0
 dw 0xAA55
-
-buffer: 
-;write to 7c00+200 = 7e00 assemble can reference it as if its going to be loaded
