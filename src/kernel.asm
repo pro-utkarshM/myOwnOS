@@ -1,5 +1,6 @@
 [BITS 32]
 global _start
+
 CODE_SEG equ 0x08
 DATA_SEG equ 0x10
 
@@ -13,7 +14,7 @@ _start:
     mov ebp, 0x00200000
     mov esp, ebp
 
-    ; enabling a20 line
+    ; Enable the A20 line
     in al, 0x92
     or al, 2
     out 0x92, al
