@@ -34,6 +34,7 @@ Here’s what’s already been checked off:
 - 🔸 BIOS Parameter Block implemented
 - 🔸 Playing around with the interrupt table
 - 🔸 First userland code runs!
+- 🔸 Set up **Interrupt Descriptor Table (IDT)** fully
 
 Every commit tells a story — from `"Big Bang"` to `"avg. hello world program.."` and `"playing with my interrupt table"` — this repo is more than just code. It’s a timeline of curiosity and deep dives.
 
@@ -43,7 +44,6 @@ Every commit tells a story — from `"Big Bang"` to `"avg. hello world program..
 
 Here’s what’s still cooking:
 
-- [ ] Set up **Interrupt Descriptor Table (IDT)** fully
 - [ ] Implement **Paging**
 - [ ] Setup **TSS (Task State Segment)**
 - [ ] Finalize **IRQ Handling**
