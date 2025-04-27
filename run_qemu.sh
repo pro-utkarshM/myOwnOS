@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Check if the user provided the file location
-if [ -z "$1" ]; then
-    echo "Usage: $0 <path-to-os.bin>"
-    exit 1
-fi
+# # Check if the user provided the file location
+# if [ -z "$1" ]; then
+#     echo "Usage: $0 <path-to-os.bin>"
+#     exit 1
+# fi
 
 # Get the file location from the argument
-OS_BIN="$1"
+OS_BIN="./bin/os.bin"
 
 # Check if the specified file exists
 if [ ! -f "$OS_BIN" ]; then
