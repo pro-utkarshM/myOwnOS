@@ -36,6 +36,7 @@ Here’s what’s already been checked off:
 - 🔸 Playing around with the interrupt table
 - 🔸 First userland code runs!
 - 🔸 Set up **Interrupt Descriptor Table (IDT)** fully
+- 🔸 Refine **in/out I/O ops**
 
 Every commit tells a story — from `"Big Bang"` to `"avg. hello world program.."` and `"playing with my interrupt table"` — this repo is more than just code. It’s a timeline of curiosity and deep dives.
 
@@ -48,7 +49,6 @@ Here’s what’s still cooking:
 - [ ] Implement **Paging**
 - [ ] Setup **TSS (Task State Segment)**
 - [ ] Finalize **IRQ Handling**
-- [ ] Refine **in/out I/O ops**
 - [ ] Expand **HDD I/O (PIO mode)**
 - [ ] Finish **FAT16 File System + VFS**
 - [ ] Kernel panic screens & graceful error handling
