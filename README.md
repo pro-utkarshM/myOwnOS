@@ -20,45 +20,6 @@ This OS is being built using:
 
 ---
 
-## What’s Already Done?
-
-> "Building my own OS from scratch — user space is up and running."
-
-Here’s what’s already been checked off:
-
-- 🔸 Bootloader (boot.asm)
-- 🔸 A20 line enabled
-- 🔸 Protected mode entered (manually, and cleanly)
-- 🔸 Kernel written in C with assembly glue
-- 🔸 Custom `Makefile`, build scripts (`build.sh`, `run_qemu.sh`)
-- 🔸 HDD sector reads working
-- 🔸 BIOS Parameter Block implemented
-- 🔸 Playing around with the interrupt table
-- 🔸 First userland code runs!
-- 🔸 Set up **Interrupt Descriptor Table (IDT)** fully
-- 🔸 Refine **in/out I/O ops**
-
-Every commit tells a story — from `"Big Bang"` to `"avg. hello world program.."` and `"playing with my interrupt table"` — this repo is more than just code. It’s a timeline of curiosity and deep dives.
-
----
-
-## What’s Next?
-
-Here’s what’s still cooking:
-
-- [ ] Implement **Paging**
-- [ ] Setup **TSS (Task State Segment)**
-- [ ] Finalize **IRQ Handling**
-- [ ] Expand **HDD I/O (PIO mode)**
-- [ ] Finish **FAT16 File System + VFS**
-- [ ] Kernel panic screens & graceful error handling
-- [ ] Virtual keyboard input
-- [ ] Run proper **user programs**
-- [ ] Basic shell interface
-- [ ] Implement **multitasking**
-
----
-
 ## Big Thanks
 
 Two resources have been absolute game-changers:
@@ -66,15 +27,5 @@ Two resources have been absolute game-changers:
 - low lEU – super clear explanations for tough concepts
 
 If you're even thinking of writing your own OS, start there. And then... just start.
-
----
-
-## Want to Follow or Contribute?
-
-Clone the repo, follow along, or just shoot me a message if you’re building something similar. Happy to learn, share, and nerd out together.
-
-**Next up: IDT, paging, and VFS. Let's go.**
-
-— Utkarsh Maurya
 
 ---
