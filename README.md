@@ -57,10 +57,6 @@ Here’s what’s still cooking:
 - [ ] Basic shell interface
 - [ ] Implement **multitasking**
 
-I’m giving this project around **2 hours/day** — slow, steady, focused.
-Will try to finish this before 21th of April, 2025
-No turning back.
-
 ---
 
 ## Big Thanks
