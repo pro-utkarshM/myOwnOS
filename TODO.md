@@ -1,263 +1,332 @@
-# TODO — Building My Own Operating System (From Scratch)
+# TODO — Build My Own Operating System (From Scratch)
 
 **Author:** Utkarsh Maurya  
 **Repository:** myOwnOS-dev-env  
-**Goal:** Build a complete x86 operating system from scratch — from bootloader to kernel, paging to userland, networking, and eBPF-style observability.
+**Goal:** Build a complete x86 operating system from scratch — from bootloader to kernel, paging to userland, networking, and modern observability.
 
 ---
 
 ## Development Environment
 
-- **Host OS:** Linux (Ubuntu/Debian)
-- **Languages:** Assembly + C
-- **Tools:** nasm, gcc, ld, qemu, make, objdump, gdb
-- **Testing:** QEMU with serial output and GDB debugging
+- **Host OS:** Linux (Debian/Ubuntu)
+- **Languages:** Assembly, C (and later C++)
+- **Toolchain:** `nasm`, `gcc`, `ld`, `make`, `qemu`, `gdb`
+- **Optional Cross-Compiler:** `i686-elf-gcc`
+- **Testing:** QEMU with GDB remote debugging
 
 ---
 
-# Phase 1: Bootloader & Kernel Entry (Completed)
+# Phase 1: Bootloader & Kernel Entry (Done)
 
-### Bootloader (boot.asm)
-**Goal:** Load the kernel into memory and enter 32-bit protected mode.
-
+### 1.1 Bootloader (16-bit Real Mode)
 - [x] Enable A20 line
-- [x] Set up GDT (Global Descriptor Table)
-- [x] Switch to Protected Mode (CR0.PE = 1)
-- [x] Jump to kernel entry point
-- [x] Load kernel from HDD using BIOS interrupts
-- [x] Implement basic print routine (BIOS teletype)
-- [x] Create build and run scripts (`build.sh`, `run_qemu.sh`)
-- [x] Write a custom Makefile
+- [x] Set up GDT
+- [x] Switch to Protected Mode (CR0.PE)
+- [x] Load kernel sectors from disk using BIOS interrupts (INT 13h)
+- [x] Simple print routine using BIOS teletype
+- [x] Implement clean build/run scripts (`build.sh`, `run_qemu.sh`)
+- [x] Custom Makefile
+- [ ] Document memory map (bootloader + kernel)
+- [ ] Add BIOS memory map detection via `INT 15h, E820h`
+- [ ] Add boot banner and error codes for debugging
 
-**Verification:** System boots and prints a kernel message after loading from disk.
-
----
-
-# Phase 2: Core Kernel Initialization (Completed)
-
-### Protected Mode Kernel
-**Goal:** Establish a clean environment for C code execution.
-
-- [x] Clear BSS section
-- [x] Set up kernel stack
-- [x] Initialize GDT (flat segmentation model)
-- [x] Call `kmain()` in C
-
-### I/O and Interrupt Setup
-**Goal:** Enable low-level hardware communication.
-
-- [x] Implement port I/O (`inb`, `outb`, `inw`, `outw`)
-- [x] Initialize the Interrupt Descriptor Table (IDT)
-- [x] Implement ISR stubs (assembly + C handlers)
-- [x] Initialize and remap the Programmable Interrupt Controller (PIC)
-- [x] Implement `sti()` and `cli()` for interrupt control
-- [x] Configure timer (IRQ0, PIT)
-- [x] Configure keyboard interrupt (IRQ1)
-- [x] Verify interrupts using serial or screen output
+### 1.2 32-bit Protected Mode
+- [x] Set up flat memory model
+- [x] Jump to kernel C entry (`kmain`)
+- [x] Prepare stack
+- [x] Clear `.bss` section
+- [ ] Relocate kernel to higher-half (`0xC0000000`) for modern layout
+- [ ] Set up paging early for higher-half relocation
 
 ---
 
-# Phase 3: Memory Management (Partially Completed)
+# Phase 2: Core Kernel Initialization
 
-### Paging
-**Goal:** Introduce virtual memory management.
+### 2.1 I/O and Interrupts
+- [x] Implement port I/O (`inb/outb/inw/outw`)
+- [x] Initialize IDT
+- [x] Implement ISR stubs (exceptions 0–31)
+- [x] Initialize PIC (remap IRQ0–15)
+- [x] Enable IRQ0 (PIT) and IRQ1 (keyboard)
+- [x] Implement `sti()` and `cli()`
+- [x] Basic timer interrupt counter
+- [ ] Print register dump on fault/interrupt
+- [ ] Implement serial debugging (`COM1`)
 
-- [x] Identity-map kernel memory (0x00000000 - 0x00400000)
-- [x] Create page directory and first page table
-- [x] Enable paging (CR3 + CR0.PG = 1)
-- [ ] Implement kernel page allocator (`alloc_page`, `free_page`)
-- [ ] Handle page faults (ISR 14)
-- [ ] Add support for mapping and unmapping pages dynamically
+### 2.2 PIT & Keyboard
+- [x] PIT driver (IRQ0)
+- [x] Keyboard interrupt handler
+- [ ] Keymap translation (scancode → ASCII)
+- [ ] Handle modifiers (Shift, Ctrl, Alt)
+- [ ] Input buffer (for shell)
 
-### Heap Memory
-**Goal:** Implement dynamic memory allocation for kernel data structures.
+---
 
-- [x] Implement block-based heap allocator
-- [ ] Add `kmalloc()` / `kfree()` wrappers
+# Phase 3: Memory Management
+
+### 3.1 Paging
+- [x] Identity-map first 4MB
+- [x] Enable paging (CR3 + CR0.PG)
+- [ ] Page allocator (`alloc_page`, `free_page`)
+- [ ] Dynamic page mapping/unmapping
+- [ ] Page fault handler (ISR 14)
+- [ ] Kernel page map visualization (`show_mappings`)
+- [ ] Demand paging & lazy mapping
+- [ ] Copy-on-Write (COW) for fork()
+
+### 3.2 Kernel Heap
+- [x] Basic heap (block-based)
+- [ ] Implement `kmalloc()` / `kfree()`
 - [ ] Implement aligned allocations
-- [ ] Add heap expansion support using paging
+- [ ] Heap expansion via paging
+- [ ] Leak detector and heap integrity check
 
-### Virtual Memory Enhancements
-- [ ] Add allocation tracking and debugging
-- [ ] Implement per-process address spaces
-- [ ] Log page faults with register state
+### 3.3 Advanced Memory Systems
+- [ ] Implement Buddy Allocator
+- [ ] Implement Slab Allocator (for kernel objects)
+- [ ] Per-process address spaces
+- [ ] Virtual memory API (`mmap`, `munmap`)
+- [ ] Huge pages (4MB)
+- [ ] Physical memory map from BIOS (E820)
+- [ ] Page coloring and caching policy (optional)
 
 ---
 
-# Phase 4: Task State Segment (TSS) & Multitasking
+# Phase 4: TSS, Privilege Levels & Multitasking
 
-### Task State Segment (TSS)
-**Goal:** Enable privilege transitions between kernel and user space.
+### 4.1 Task State Segment (TSS)
+- [ ] Define TSS structure
+- [ ] Add TSS descriptor to GDT
+- [ ] Load with `ltr`
+- [ ] Set `esp0` and `ss0` for privilege transitions
+- [ ] Verify stack switch on privilege change
 
-- [ ] Define TSS structure (`tss_entry_t`)
-- [ ] Set `esp0` and `ss0` for kernel stack switching
-- [ ] Load TSS descriptor into GDT
-- [ ] Load TSS using `ltr` instruction
-- [ ] Verify privilege transitions between rings
-
-### Multitasking (Round-Robin)
-**Goal:** Run multiple processes concurrently.
-
-- [ ] Define `task_t` structure (registers, stack, page directory)
-- [ ] Implement context switching (`switch_task()`)
-- [ ] Implement timer-based preemption (IRQ0)
-- [ ] Maintain a ready queue of tasks
+### 4.2 Basic Tasking
+- [ ] Define `task_t` (registers, stack, page directory)
+- [ ] Implement context switch
+- [ ] Create task queue
+- [ ] Timer preemption (IRQ0)
 - [ ] Add idle task
-- [ ] Create `create_task(func)` to spawn new tasks
+- [ ] Implement `create_task(func)`
 
-### Advanced Scheduling
-- [ ] Implement priority-based scheduling
-- [ ] Add sleep/wait mechanisms
-- [ ] Enable process-specific memory spaces
+### 4.3 Scheduling
+- [ ] Round-robin scheduler
+- [ ] Priority-based scheduling
+- [ ] Sleep/wait queue
+- [ ] Blocking/wake-up system
+- [ ] Implement process states (READY, RUNNING, WAITING)
+- [ ] Load balancing (for SMP later)
 
 ---
 
 # Phase 5: Disk I/O & File Systems
 
-### ATA PIO Driver
-**Goal:** Implement low-level disk sector read/write.
+### 5.1 ATA PIO Driver
+- [ ] Detect primary/secondary drives
+- [ ] Implement `ata_read()` / `ata_write()`
+- [ ] Poll drive status registers
+- [ ] Verify sector read/write in QEMU
+- [ ] Add caching for sectors
 
-- [ ] Implement `ata_read(sector, count, buffer)`
-- [ ] Implement `ata_write(sector, count, buffer)`
-- [ ] Poll drive status registers for readiness
-- [ ] Handle drive selection and command setup
-- [ ] Detect connected drives (primary/secondary)
-
-### FAT16 File System
-**Goal:** Implement a simple FAT16 file system driver.
-
+### 5.2 FAT16 File System
 - [ ] Parse BIOS Parameter Block (BPB)
-- [ ] Load FAT table into memory
-- [ ] Implement directory listing
-- [ ] Implement file read operations
-- [ ] Implement file write operations
-- [ ] Mount FAT16 as root filesystem (`/`)
+- [ ] Load FAT table
+- [ ] Directory listing
+- [ ] Read files by cluster chain
+- [ ] Write files
+- [ ] Mount FAT16 as root (`/`)
 
-### Virtual File System (VFS)
-**Goal:** Create an abstraction layer for file systems.
+### 5.3 Virtual File System (VFS)
+- [ ] Define `vnode`, `vfs_mount`, `file_ops`
+- [ ] `open`, `read`, `write`, `close`
+- [ ] Register FAT16 with VFS
+- [ ] Initialize `/dev`, `/bin`, `/proc`
+- [ ] Implement pseudo-filesystems later (`procfs`, `sysfs`)
 
-- [ ] Define `vnode` and `vfs_mount` structures
-- [ ] Register supported file systems
-- [ ] Implement VFS operations (`open`, `read`, `write`, `close`)
-- [ ] Mount FAT16 as root
-- [ ] Initialize `/dev` and `/bin` directories
-
----
-
-# Phase 6: Userland & Shell
-
-### Keyboard Input
-**Goal:** Implement PS/2 keyboard driver.
-
-- [ ] Convert scancodes to ASCII
-- [ ] Handle key release and modifier keys
-- [ ] Maintain input buffer
-- [ ] Provide `getchar()` for userland programs
-
-### User Programs
-**Goal:** Execute user programs from disk.
-
-- [ ] Implement flat binary loader
-- [ ] Allocate user stack and code segment
-- [ ] Implement syscalls
-- [ ] Switch from ring 0 to ring 3
-- [ ] Return control to kernel on interrupt/syscall
-
-### Shell
-**Goal:** Create a minimal command-line shell.
-
-- [ ] Display prompt (`myOS>`)
-- [ ] Implement core commands:
-  - [ ] `help`
-  - [ ] `ls`
-  - [ ] `cat`
-  - [ ] `reboot`
-- [ ] Optional: history and command parsing improvements
+### 5.4 Ext2 (Advanced)
+- [ ] Parse superblock/inodes
+- [ ] Block caching layer
+- [ ] Read/write ext2 files
+- [ ] Mount/unmount multiple FS types
 
 ---
 
-# Phase 7: Networking Stack
+# Phase 6: Process Management & Syscalls
 
-### NIC Driver (QEMU rtl8139 / e1000)
-**Goal:** Initialize and communicate with a virtual network card.
+### 6.1 Syscalls
+- [ ] Implement syscall interrupt (`int 0x80`)
+- [ ] Define syscall table
+- [ ] Implement core syscalls:
+  - [ ] `write`, `read`, `open`, `close`
+  - [ ] `fork`, `exec`, `waitpid`, `exit`
+  - [ ] `getpid`, `sleep`, `kill`
+- [ ] Implement `sysenter/syscall` fast path (optional)
 
-- [ ] Detect PCI devices
+### 6.2 ELF Loader
+- [ ] Parse ELF headers
+- [ ] Map segments into process memory
+- [ ] Set up user stack
+- [ ] Transfer control to user mode via `iret`
+- [ ] Validate segment permissions
+
+### 6.3 Process Management
+- [ ] Implement process table
+- [ ] Implement process state transitions
+- [ ] Implement signal delivery system
+- [ ] Process cleanup and zombie reaping
+- [ ] Kernel threads vs. user processes
+
+---
+
+# Phase 7: Userland & Shell
+
+### 7.1 Standard I/O
+- [ ] Keyboard driver with ASCII
+- [ ] Console output driver
+- [ ] File descriptor abstraction (stdin/stdout/stderr)
+
+### 7.2 Shell
+- [ ] Command prompt (`myOS>`)
+- [ ] `help`, `ls`, `cat`, `reboot`, `clear`
+- [ ] Command parsing
+- [ ] Command history
+- [ ] Basic scripting support (batch file execution)
+
+### 7.3 Userland Programs
+- [ ] Implement simple `init` process
+- [ ] Create example programs:
+  - [ ] `echo`, `ps`, `sleep`, `malloc-test`
+  - [ ] `netping`, `cat`, `top`
+- [ ] Dynamic linking (optional)
+
+---
+
+# Phase 8: Networking Stack
+
+### 8.1 Network Driver (rtl8139/e1000)
+- [ ] PCI device detection
 - [ ] Map MMIO registers
-- [ ] Initialize RX/TX ring buffers
-- [ ] Handle NIC interrupts
-- [ ] Transmit and receive Ethernet frames
+- [ ] Initialize TX/RX descriptors
+- [ ] Interrupt handling
+- [ ] Send/receive Ethernet frames
 
-### Network Stack Layers
-
-**Ethernet (Layer 2)**
-- [ ] Parse destination/source MAC and Ethertype
+### 8.2 Protocol Layers
+**Layer 2 — Ethernet**
+- [ ] Parse MAC headers
 - [ ] Register protocol handlers (ARP, IP)
 
-**IPv4 (Layer 3)**
+**Layer 3 — IPv4**
 - [ ] Parse IP headers
-- [ ] Implement checksum verification
-- [ ] Implement ICMP (ping)
-- [ ] Create routing table (static)
+- [ ] Validate checksums
+- [ ] Handle ICMP (ping)
+- [ ] Routing table
 
-**UDP (Layer 4)**
-- [ ] Implement UDP header creation
-- [ ] Send and receive datagrams
-- [ ] Map to userland socket API
+**Layer 4 — UDP**
+- [ ] Implement header construction
+- [ ] `udp_send()`, `udp_recv()`
 
-**TCP (Stretch Goal)**
-- [ ] Implement 3-way handshake
-- [ ] Support basic send/receive streams
+**Layer 4 — TCP (Advanced)**
+- [ ] 3-way handshake
+- [ ] Connection states
+- [ ] Retransmission & congestion handling
 
-### Network Utilities
-- [ ] netping — send ICMP echo requests
-- [ ] netcat — send and receive UDP packets
-- [ ] netstat — display connection table
+### 8.3 Sockets API
+- [ ] Implement `socket()`, `bind()`, `sendto()`, `recvfrom()`
+- [ ] Support UDP first, TCP later
+- [ ] `/dev/net` interface for debugging
+
+### 8.4 Networking Tools
+- [ ] `netping` — ICMP echo
+- [ ] `netcat` — send/receive packets
+- [ ] `netstat` — show connections
+- [ ] `ifconfig` — show interfaces
 
 ---
 
-# Phase 8: eBPF-Inspired Observability
+# Phase 9: eBPF & Kernel Observability
 
-### eBPF Virtual Machine
-**Goal:** Implement a minimal bytecode interpreter for safe kernel instrumentation.
-
-- [ ] Define instruction set (registers, ALU ops, jumps)
+### 9.1 eBPF Virtual Machine
+- [ ] Define instruction set
 - [ ] Implement interpreter
-- [ ] Add verifier for bounded loops and memory safety
-- [ ] Implement map types (array, hash)
-- [ ] Add syscalls to load and execute programs
+- [ ] Verifier for safety
+- [ ] Implement map types (`array`, `hash`)
+- [ ] eBPF syscalls (`bpf_load_program`, `bpf_map_update`)
 
-### Attach Points
-- [ ] Syscall entry and exit
+### 9.2 Attach Points
+- [ ] Syscalls
 - [ ] Network RX/TX
-- [ ] Timer tick
-- [ ] Custom kernel tracepoints
+- [ ] Scheduler events
+- [ ] Timer ticks
+- [ ] Custom tracepoints
 
-### Example Programs
-- [ ] syscall_counter — count syscalls
-- [ ] net_monitor — track packets per protocol
-- [ ] perf_trace — monitor interrupts and context switches
-
----
-
-# Phase 9: Debugging & Tooling
-
-- [ ] Enable serial port (COM1) debugging
-- [ ] Implement panic with stack trace
-- [ ] Add kernel symbol table for backtraces
-- [ ] Enable remote GDB debugging via QEMU (`qemu -s -S`)
-- [ ] Create `debug_qemu.sh` helper script
+### 9.3 Tools
+- [ ] `syscall_counter`
+- [ ] `net_monitor`
+- [ ] `perf_trace`
 
 ---
 
-# Phase 10: Polishing & Long-Term Goals
+# Phase 10: Multiprocessing (SMP)
 
-- [ ] Implement ELF loader for user programs
-- [ ] Add dynamic linker (optional)
-- [ ] Define syscall table and handler stubs
-- [ ] Implement kernel log buffer (`dmesg` equivalent)
-- [ ] Add `/proc` pseudo-filesystem
-- [ ] Create `init` process
-- [ ] Implement framebuffer-based GUI (long-term)
+- [ ] Enable APIC
+- [ ] Detect CPU cores via ACPI/MADT
+- [ ] Bootstrap secondary CPUs
+- [ ] Per-CPU stacks & schedulers
+- [ ] Inter-Processor Interrupts (IPI)
+- [ ] Local APIC timers per CPU
+- [ ] Load balancing between cores
+- [ ] Spinlocks and atomic primitives
+- [ ] Cross-CPU task migration
+
+---
+
+# Phase 11: Debugging & Tooling
+
+- [ ] Serial debug log
+- [ ] Kernel panic with stack trace
+- [ ] Symbol resolution for backtraces
+- [ ] `dmesg` buffer
+- [ ] Remote GDB debugging (`qemu -s -S`)
+- [ ] `debug_qemu.sh` script
+- [ ] Memory dump utility
+- [ ] Kernel profiling (timer + counters)
+
+---
+
+# Phase 12: Advanced & Research-Level Systems
+
+### 12.1 Kernel Architecture
+- [ ] Microkernel mode (move drivers to user space)
+- [ ] Hybrid kernel experiments
+- [ ] Capability-based security model
+
+### 12.2 Performance & Security
+- [ ] Kernel ASLR
+- [ ] Stack canaries
+- [ ] Guard pages
+- [ ] Measure syscall latency and context switch time
+
+### 12.3 Virtualization
+- [ ] Implement basic VMM (VMX/SVM)
+- [ ] Virtual memory introspection
+- [ ] Guest process monitoring
+
+### 12.4 Self-Hosting
+- [ ] Port a small compiler (TinyCC)
+- [ ] Compile a program inside your OS
+- [ ] Compile your own kernel inside itself (self-hosting milestone)
+
+---
+
+# Phase 13: Optional Research Extensions
+
+- [ ] Exokernel (apps manage hardware)
+- [ ] Rust-based kernel port
+- [ ] Formal verification of MMU or scheduler
+- [ ] Log-structured filesystem (LFS)
+- [ ] Deterministic replay debugger
+- [ ] Kernel-in-userspace mode for fast testing
+- [ ] Distributed file system (mini NFS)
 
 ---
 
@@ -265,12 +334,32 @@
 
 | Milestone | Focus | Status |
 |------------|--------|--------|
-| M1 | Bootloader and Protected Mode | Completed |
-| M2 | Interrupts, Paging, Heap | Completed |
-| M3 | TSS and Multitasking | In Progress |
-| M4 | File System and VFS | Pending |
-| M5 | Userland and Shell | Pending |
-| M6 | Networking Stack | Pending |
-| M7 | eBPF Observability | Planned |
+| M1 | Bootloader & Protected Mode | Completed |
+| M2 | Interrupts & Basic Paging | Completed |
+| M3 | Heap, Page Allocator | In Progress |
+| M4 | TSS & Multitasking | Pending |
+| M5 | File Systems & VFS | Pending |
+| M6 | Syscalls & ELF Loader | Pending |
+| M7 | Userland & Shell | Pending |
+| M8 | Networking Stack | Planned |
+| M9 | eBPF & Observability | Planned |
+| M10 | SMP & Optimization | Planned |
+| M11 | Debugging & Tooling | Planned |
+| M12 | Research Extensions | Optional |
 
 ---
+
+# Immediate Next Steps
+
+1. Finalize kernel page allocator and page fault handler.  
+2. Implement TSS and prepare for user-mode transition.  
+3. Build round-robin multitasking with two dummy tasks.  
+4. Begin ATA driver and simple FAT16 reader.  
+5. Read Intel Manual Vol. 3A (System Programming).  
+6. Document memory map, interrupt vector layout, and page layout in `/docs/`.  
+
+---
+
+**Endgame:**  
+A self-hosting, multitasking, networked, traceable, and observable OS — capable of compiling and debugging itself.  
+Once achieved, you’ll have mastered every major system in modern computing.
